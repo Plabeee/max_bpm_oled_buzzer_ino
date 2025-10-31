@@ -1,0 +1,78 @@
+name: Arduino Build and Deploy to Web Flasher Branch
+
+on:
+  push:
+    branches: [ 'main' ]
+
+jobs:
+  build-and-deploy:
+    # Prevent workflow loops: Don't run if the commit message includes [ci skip]
+    if: "contains(github.event.head_commit.message, '[ci skip]') == false"
+
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Check out the 'main' branch (this is where the source code is)
+      - name: Check out source branch (main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # 2. Set up Arduino CLI
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      # 3. Install the ESP32 platform
+      - name: Install ESP32 platform
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+      # 4. Install any libraries you need
+      # (Uncomment and modify this section if your sketch has dependencies)
+      - name: Install Libraries
+        run: |
+          arduino-cli lib install "Adafruit GFX Library" "Adafruit SSD1306" "SparkFun MAX3010x Pulse and Proximity Sensor Library"
+      #     arduino-cli lib install "WiFi"
+      #     arduino-cli lib install "ArduinoJson"
+
+      # 5. Compile the sketch
+      # ---!!! IMPORTANT: CHANGE THESE VALUES !!!---
+      # --fqbn: Your Fully Qualified Board Name.
+      # ./MySketch: The path to your sketch (the folder containing your .ino file)
+
+      # 5. Compile the sketch
+      - name: Compile Sketch
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32 \
+            --output-dir ./build \
+            ./
+
+      # 6. Prepare the firmware file for deployment
+      - name: Prepare Firmware
+        run: |
+          # Create a directory structure that matches the target branch
+          mkdir -p deploy/
+          # Copy and rename the merged binary to the stable name
+          cp ./build/max_bpm_oled_buzzer_ino.ino.merged.bin deploy/latest.bin
+
+      # 7. Push the 'deploy' directory to the 'web-flasher' branch
+      - name: Deploy to web-flasher branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # Use the default GITHUB_TOKEN (no personal token needed)
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # The branch to push to (in this same repo)
+          publish_branch: web-flasher
+          
+          # The directory to publish
+          # This will push the 'firmware' folder into the root of the 'web-flasher' branch
+          publish_dir: ./
+          
+          # CRITICAL: This prevents the action from deleting
+          # your index.html, manifest.json, etc. on that branch
+          keep_files: true
+          
+          # Commit message for the web-flasher branch
+          commit_message: Update latest.bin firmware [ci skip]
+
