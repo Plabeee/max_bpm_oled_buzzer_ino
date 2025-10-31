@@ -48,33 +48,35 @@ jobs:
             --fqbn esp32:esp32:esp32 \
             --output-dir ./build \
             ./
-
+      # 5. Check out the 'gh-pages' branch (for deployment)
+      # We check it out to a *separate* subdirectory
+      - name: Check out deploy branch (web-flasher)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
       # 6. Prepare the firmware file for deployment
       - name: Prepare Firmware
         run: |
           # Create a directory structure that matches the target branch
-          mkdir -p deploy/
+          mkdir -p gh-pages/firmware/
           # Copy and rename the merged binary to the stable name
-          cp ./build/max_bpm_oled_buzzer_ino.ino.merged.bin deploy/latest.bin
+          cp -f ./build/max_bpm_oled_buzzer_ino.ino.merged.bin gh/pages/firmware/latest.bin
 
-      # 7. Push the 'deploy' directory to the 'web-flasher' branch
-      - name: Deploy to web-flasher branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          # Use the default GITHUB_TOKEN (no personal token needed)
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # 7. Commit and push *only* the new binary
+      - name: Commit and Push to gh-pages
+        run: |
+          cd ./gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # The branch to push to (in this same repo)
-          publish_branch: web-flasher
-          
-          # The directory to publish
-          # This will push the 'firmware' folder into the root of the 'web-flasher' branch
-          publish_dir: ./
-          
-          # CRITICAL: This prevents the action from deleting
-          # your index.html, manifest.json, etc. on that branch
-          keep_files: true
-          
-          # Commit message for the web-flasher branch
-          commit_message: Update latest.bin firmware [ci skip]
+          # Check if there are any changes to commit
+          if -z "$(git status --porcelain)"; then
+            echo "No changes to commit. 'latest.bin' is already up-to-date."
+          else
+            # Add only the new firmware file
+            git add firmware/latest.bin
+            git commit -m "Update latest.bin firmware [ci skip]"
+            git push
+          fi
 
