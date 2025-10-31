@@ -50,7 +50,7 @@ jobs:
             ./
       # 5. Check out the 'gh-pages' branch (for deployment)
       # We check it out to a *separate* subdirectory
-      - name: Check out deploy branch (web-flasher)
+      - name: Check out deploy branch (gh-pages)
         uses: actions/checkout@v4
         with:
           ref: gh-pages
@@ -61,7 +61,7 @@ jobs:
           # Create a directory structure that matches the target branch
           mkdir -p gh-pages/firmware/
           # Copy and rename the merged binary to the stable name
-          cp -f ./build/max_bpm_oled_buzzer_ino.ino.merged.bin gh/pages/firmware/latest.bin
+          cp -f ./build/max_bpm_oled_buzzer_ino.ino.merged.bin gh-pages/firmware/latest.bin
 
       # 7. Commit and push *only* the new binary
       - name: Commit and Push to gh-pages
