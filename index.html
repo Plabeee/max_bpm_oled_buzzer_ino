@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My ESP32 Flasher</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <h1>My Project Flasher</h1>
+    <p>Connect your ESP32 and click the button to flash the latest firmware.</p>
+
+    <script
+      type="module"
+      src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
+    ></script>
+
+    <esp-web-install-button
+      manifest="manifest.json"
+    ></esp-web-install-button>
+  </body>
+</html>
