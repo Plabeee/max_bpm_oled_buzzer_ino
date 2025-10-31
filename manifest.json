@@ -1,0 +1,14 @@
+{
+  "name": "My Project",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "firmware/latest.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
